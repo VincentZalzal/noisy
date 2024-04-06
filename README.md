@@ -1,6 +1,6 @@
 # noisy
 
-`vz::Noisy` is a type you can use to quickly check which special member function (constructors, assignment operators, destructors) are being called by a block of code.
+`vz::Noisy` is a type you can use to quickly check which special member functions (constructors, assignment operators, destructors) are being called by a block of code.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ This project is kept as simple as possible. It is not intended for production co
 
 The main use-case is code exploration, especially on [Compiler Explorer](https://godbolt.org/).
 
-*Compiler Explorer* allows including a file directly using an URL. Thus, you could for example confirm that [guaranteed copy elision](https://en.cppreference.com/w/cpp/language/copy_elision) works as you expect:
+*Compiler Explorer* allows including a file directly using a URL. Thus, you could for example confirm that [guaranteed copy elision](https://en.cppreference.com/w/cpp/language/copy_elision) works as you expect:
 ```cpp
 #include <https://raw.githubusercontent.com/VincentZalzal/noisy/main/noisy.h>
 
@@ -36,7 +36,7 @@ Counters
 ```
 (see it on [Compiler Explorer](https://godbolt.org/z/fPEzc4do4))
 
-You can also use it inside your tests. For example, after using `vz::Noisy`:
+You can also use it inside your tests. For example, after testing your generic function with `vz::Noisy`, you can validate the number of calls for all special member functions:
 ```cpp
     const vz::Counters expected_counts = {
         .m_instance    = 5,
