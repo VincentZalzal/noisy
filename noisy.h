@@ -4,108 +4,118 @@
 
 namespace vz {
 
-class Counters {
-public:
-    static Counters& instance() {
-        static Counters counters;
-        return counters;
-    }
-
-    unsigned next_id() { return m_instance_count++; }
-
-    void inc_def_ctor   () { ++m_def_ctor_count   ; }
-    void inc_copy_ctor  () { ++m_copy_ctor_count  ; }
-    void inc_move_ctor  () { ++m_move_ctor_count  ; }
-    void inc_copy_assign() { ++m_copy_assign_count; }
-    void inc_move_assign() { ++m_move_assign_count; }
-    void inc_dtor       () { ++m_dtor_count       ; }
+struct Counters {
+    unsigned m_instance    = 0;
+    unsigned m_def_ctor    = 0;
+    unsigned m_copy_ctor   = 0;
+    unsigned m_move_ctor   = 0;
+    unsigned m_copy_assign = 0;
+    unsigned m_move_assign = 0;
+    unsigned m_dtor        = 0;
 
     void reset() {
-        m_instance_count    = 0;
-        m_def_ctor_count    = 0;
-        m_copy_ctor_count   = 0;
-        m_move_ctor_count   = 0;
-        m_copy_assign_count = 0;
-        m_move_assign_count = 0;
-        m_dtor_count        = 0;
+        *this = {};
     }
 
-    unsigned instance_count   () const { return m_instance_count   ; }
-    unsigned def_ctor_count   () const { return m_def_ctor_count   ; }
-    unsigned copy_ctor_count  () const { return m_copy_ctor_count  ; }
-    unsigned move_ctor_count  () const { return m_move_ctor_count  ; }
-    unsigned copy_assign_count() const { return m_copy_assign_count; }
-    unsigned move_assign_count() const { return m_move_assign_count; }
-    unsigned dtor_count       () const { return m_dtor_count       ; }
-
-private:
-    Counters() = default;
-    ~Counters() {
+    void print() const {
         std::cout
             << "---------------------------------\n"
             << "Counters\n"
-            << "  Instance count:            " << m_instance_count << '\n';
-        if (m_def_ctor_count != 0)
-            std::cout << "  Default constructor count: " << m_def_ctor_count << '\n';
-        if (m_copy_ctor_count != 0)
-            std::cout << "  Copy constructor count:    " << m_copy_ctor_count << '\n';
-        if (m_move_ctor_count != 0)
-            std::cout << "  Move constructor count:    " << m_move_ctor_count << '\n';
-        if (m_copy_assign_count != 0)
-            std::cout << "  Copy assignment count:     " << m_copy_assign_count << '\n';
-        if (m_move_assign_count != 0)
-            std::cout << "  Move assignment count:     " << m_move_assign_count << '\n';
-        if (m_dtor_count != 0)
-            std::cout << "  Destructor count:          " << m_dtor_count << '\n';
+            << "  Instance count:            " << m_instance << '\n';
+        if (m_def_ctor != 0)
+            std::cout << "  Default constructor count: " << m_def_ctor << '\n';
+        if (m_copy_ctor != 0)
+            std::cout << "  Copy constructor count:    " << m_copy_ctor << '\n';
+        if (m_move_ctor != 0)
+            std::cout << "  Move constructor count:    " << m_move_ctor << '\n';
+        if (m_copy_assign != 0)
+            std::cout << "  Copy assignment count:     " << m_copy_assign << '\n';
+        if (m_move_assign != 0)
+            std::cout << "  Move assignment count:     " << m_move_assign << '\n';
+        if (m_dtor != 0)
+            std::cout << "  Destructor count:          " << m_dtor << '\n';
     }
 
-    unsigned m_instance_count    = 0;
-    unsigned m_def_ctor_count    = 0;
-    unsigned m_copy_ctor_count   = 0;
-    unsigned m_move_ctor_count   = 0;
-    unsigned m_copy_assign_count = 0;
-    unsigned m_move_assign_count = 0;
-    unsigned m_dtor_count        = 0;
+    friend bool operator==(const Counters& lhs, const Counters& rhs) {
+        return
+            lhs.m_instance    == rhs.m_instance    &&
+            lhs.m_def_ctor    == rhs.m_def_ctor    &&
+            lhs.m_copy_ctor   == rhs.m_copy_ctor   &&
+            lhs.m_move_ctor   == rhs.m_move_ctor   &&
+            lhs.m_copy_assign == rhs.m_copy_assign &&
+            lhs.m_move_assign == rhs.m_move_assign &&
+            lhs.m_dtor        == rhs.m_dtor        ;
+    }
+
+    friend bool operator!=(const Counters& lhs, const Counters& rhs) { return !(lhs == rhs); }
 };
 
+namespace detail {
+
+struct NoisyCounters : Counters {
+    ~NoisyCounters() {
+        print();
+    }
+
+    void print_and_reset() {
+        if (m_instance != 0) {
+            print();
+            reset();
+        }
+    }
+
+    unsigned next_id() { return m_instance++; }
+};
+
+}
+
 class Noisy {
+private:
+    static detail::NoisyCounters& noisy_counters() {
+        static detail::NoisyCounters counts;
+        return counts;
+    }
+
 public:
+    static const Counters& counters() { return noisy_counters(); }
+    static void reset_counters() { noisy_counters().print_and_reset(); }
+
     Noisy() {
         std::cout << "Noisy(" << m_id << "): default constructor\n";
-        Counters::instance().inc_def_ctor();
+        noisy_counters().m_def_ctor++;
     }
 
     Noisy(const Noisy& other) {
         std::cout << "Noisy(" << m_id << "): copy constructor from Noisy(" << other.m_id << ")\n";
-        Counters::instance().inc_copy_ctor();
+        noisy_counters().m_copy_ctor++;
     }
 
     Noisy(Noisy&& other) noexcept {
         std::cout << "Noisy(" << m_id << "): move constructor from Noisy(" << other.m_id << ")\n";
-        Counters::instance().inc_move_ctor();
+        noisy_counters().m_move_ctor++;
     }
 
     ~Noisy() {
         std::cout << "Noisy(" << m_id << "): destructor\n";
-        Counters::instance().inc_dtor();
+        noisy_counters().m_dtor++;
     }
 
     Noisy& operator=(const Noisy& other) {
         std::cout << "Noisy(" << m_id << "): copy assignment from Noisy(" << other.m_id << ")\n";
-        Counters::instance().inc_copy_assign();
+        noisy_counters().m_copy_assign++;
         return *this;
     }
 
     Noisy& operator=(Noisy&& other) noexcept {
         std::cout << "Noisy(" << m_id << "): move assignment from Noisy(" << other.m_id << ")\n";
-        Counters::instance().inc_move_assign();
+        noisy_counters().m_move_assign++;
         return *this;
     }
 
     unsigned id() const { return m_id; }
 
 private:
-    unsigned m_id = Counters::instance().next_id();
+    unsigned m_id = noisy_counters().next_id();
 };
 
 }
