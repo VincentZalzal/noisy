@@ -20,12 +20,10 @@ int main() {
     test();
     const auto counts = Noisy::counters();
     
-    assert(counts.m_def_ctor + counts.m_copy_ctor + counts.m_move_ctor == counts.m_instance); // invariant of Noisy
-    assert(counts.m_instance == counts.m_dtor); // no leak in user code
+    assert(counts.m_def_ctor + counts.m_copy_ctor + counts.m_move_ctor == counts.m_dtor); // no leak in user code
 
     // specific to test()
     const vz::Counters expected_counts = {
-        .m_instance    = 5,
         .m_def_ctor    = 3,
         .m_copy_ctor   = 1,
         .m_move_ctor   = 1,

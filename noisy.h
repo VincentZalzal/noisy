@@ -1,11 +1,11 @@
 #pragma once
 
+#include <iomanip>
 #include <iostream>
 
 namespace vz {
 
 struct Counters {
-    unsigned m_instance    = 0;
     unsigned m_def_ctor    = 0;
     unsigned m_copy_ctor   = 0;
     unsigned m_move_ctor   = 0;
@@ -17,28 +17,18 @@ struct Counters {
         *this = {};
     }
 
-    void print() const {
-        std::cout
-            << "---------------------------------\n"
-            << "Counters\n"
-            << "  Instance count:            " << m_instance << '\n';
-        if (m_def_ctor != 0)
-            std::cout << "  Default constructor count: " << m_def_ctor << '\n';
-        if (m_copy_ctor != 0)
-            std::cout << "  Copy constructor count:    " << m_copy_ctor << '\n';
-        if (m_move_ctor != 0)
-            std::cout << "  Move constructor count:    " << m_move_ctor << '\n';
-        if (m_copy_assign != 0)
-            std::cout << "  Copy assignment count:     " << m_copy_assign << '\n';
-        if (m_move_assign != 0)
-            std::cout << "  Move assignment count:     " << m_move_assign << '\n';
-        if (m_dtor != 0)
-            std::cout << "  Destructor count:          " << m_dtor << '\n';
+    void print(const char* msg = "Counters") const {
+        std::cout << "[ *** " << msg << " *** ]\n";
+        print_counter("Default constructor count: ", m_def_ctor   );
+        print_counter("Copy constructor count:    ", m_copy_ctor  );
+        print_counter("Move constructor count:    ", m_move_ctor  );
+        print_counter("Copy assignment count:     ", m_copy_assign);
+        print_counter("Move assignment count:     ", m_move_assign);
+        print_counter("Destructor count:          ", m_dtor       );
     }
 
     friend bool operator==(const Counters& lhs, const Counters& rhs) {
         return
-            lhs.m_instance    == rhs.m_instance    &&
             lhs.m_def_ctor    == rhs.m_def_ctor    &&
             lhs.m_copy_ctor   == rhs.m_copy_ctor   &&
             lhs.m_move_ctor   == rhs.m_move_ctor   &&
@@ -48,6 +38,12 @@ struct Counters {
     }
 
     friend bool operator!=(const Counters& lhs, const Counters& rhs) { return !(lhs == rhs); }
+
+private:
+    static void print_counter(const char* msg, unsigned value) {
+        if (value != 0)
+            std::cout << msg << std::setw(2) << value << '\n';
+    }
 };
 
 namespace detail {
@@ -65,6 +61,8 @@ struct NoisyCounters : Counters {
     }
 
     unsigned next_id() { return m_instance++; }
+
+    unsigned m_instance = 0;
 };
 
 }
@@ -81,38 +79,40 @@ public:
     static void reset_counters() { noisy_counters().print_and_reset(); }
 
     Noisy() {
-        std::cout << "Noisy(" << m_id << "): default constructor\n";
+        std::cout << *this << ": default constructor\n";
         noisy_counters().m_def_ctor++;
     }
 
     Noisy(const Noisy& other) {
-        std::cout << "Noisy(" << m_id << "): copy constructor from Noisy(" << other.m_id << ")\n";
+        std::cout << *this << ": copy constructor from " << other << '\n';
         noisy_counters().m_copy_ctor++;
     }
 
     Noisy(Noisy&& other) noexcept {
-        std::cout << "Noisy(" << m_id << "): move constructor from Noisy(" << other.m_id << ")\n";
+        std::cout << *this << ": move constructor from " << other << '\n';
         noisy_counters().m_move_ctor++;
     }
 
     ~Noisy() {
-        std::cout << "Noisy(" << m_id << "): destructor\n";
+        std::cout << *this << ": destructor\n";
         noisy_counters().m_dtor++;
     }
 
     Noisy& operator=(const Noisy& other) {
-        std::cout << "Noisy(" << m_id << "): copy assignment from Noisy(" << other.m_id << ")\n";
+        std::cout << *this << ": copy assignment from " << other << '\n';
         noisy_counters().m_copy_assign++;
         return *this;
     }
 
     Noisy& operator=(Noisy&& other) noexcept {
-        std::cout << "Noisy(" << m_id << "): move assignment from Noisy(" << other.m_id << ")\n";
+        std::cout << *this << ": move assignment from " << other << '\n';
         noisy_counters().m_move_assign++;
         return *this;
     }
 
     unsigned id() const { return m_id; }
+
+    friend std::ostream& operator<<(std::ostream& os, const Noisy& noisy) { return os << "Noisy(" << std::setw(2) << noisy.m_id << ')'; }
 
 private:
     unsigned m_id = noisy_counters().next_id();
