@@ -48,12 +48,13 @@ private:
 
 namespace detail {
 
-struct NoisyCounters : Counters {
-    ~NoisyCounters() {
+struct Globals {
+    ~Globals() {
         if (m_verbose)
-            print();
+            m_counters.print();
     }
 
+    Counters m_counters;
     unsigned m_next_id = 0;
     bool     m_verbose = true;
 };
@@ -62,50 +63,50 @@ struct NoisyCounters : Counters {
 
 class Noisy {
 private:
-    static detail::NoisyCounters& noisy_counters() {
-        static detail::NoisyCounters counts;
-        return counts;
+    static detail::Globals& globals() {
+        static detail::Globals s_globals;
+        return s_globals;
     }
 
 public:
-    static Counters& counters() { return noisy_counters(); }
-    static void set_verbose(bool verbose) { noisy_counters().m_verbose = verbose; }
+    static Counters& counters() { return globals().m_counters; }
+    static void set_verbose(bool verbose) { globals().m_verbose = verbose; }
 
     Noisy() {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": default constructor\n";
-        noisy_counters().m_def_ctor++;
+        globals().m_counters.m_def_ctor++;
     }
 
     Noisy(const Noisy& other) {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": copy constructor from " << other << '\n';
-        noisy_counters().m_copy_ctor++;
+        globals().m_counters.m_copy_ctor++;
     }
 
     Noisy(Noisy&& other) noexcept {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": move constructor from " << other << '\n';
-        noisy_counters().m_move_ctor++;
+        globals().m_counters.m_move_ctor++;
     }
 
     ~Noisy() {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": destructor\n";
-        noisy_counters().m_dtor++;
+        globals().m_counters.m_dtor++;
     }
 
     Noisy& operator=(const Noisy& other) {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": copy assignment from " << other << '\n';
-        noisy_counters().m_copy_assign++;
+        globals().m_counters.m_copy_assign++;
         return *this;
     }
 
     Noisy& operator=(Noisy&& other) noexcept {
-        if (noisy_counters().m_verbose)
+        if (globals().m_verbose)
             std::cout << *this << ": move assignment from " << other << '\n';
-        noisy_counters().m_move_assign++;
+        globals().m_counters.m_move_assign++;
         return *this;
     }
 
@@ -114,7 +115,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Noisy& noisy) { return os << "Noisy(" << std::setw(2) << noisy.m_id << ')'; }
 
 private:
-    unsigned m_id = noisy_counters().m_next_id++;
+    unsigned m_id = globals().m_next_id++;
 };
 
 }
