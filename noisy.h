@@ -50,19 +50,12 @@ namespace detail {
 
 struct NoisyCounters : Counters {
     ~NoisyCounters() {
-        print();
-    }
-
-    void print_and_reset() {
-        if (m_instance != 0) {
+        if (m_verbose)
             print();
-            reset();
-        }
     }
 
-    unsigned next_id() { return m_instance++; }
-
-    unsigned m_instance = 0;
+    unsigned m_next_id = 0;
+    bool     m_verbose = true;
 };
 
 }
@@ -75,37 +68,43 @@ private:
     }
 
 public:
-    static const Counters& counters() { return noisy_counters(); }
-    static void reset_counters() { noisy_counters().print_and_reset(); }
+    static Counters& counters() { return noisy_counters(); }
+    static void set_verbose(bool verbose) { noisy_counters().m_verbose = verbose; }
 
     Noisy() {
-        std::cout << *this << ": default constructor\n";
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": default constructor\n";
         noisy_counters().m_def_ctor++;
     }
 
     Noisy(const Noisy& other) {
-        std::cout << *this << ": copy constructor from " << other << '\n';
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": copy constructor from " << other << '\n';
         noisy_counters().m_copy_ctor++;
     }
 
     Noisy(Noisy&& other) noexcept {
-        std::cout << *this << ": move constructor from " << other << '\n';
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": move constructor from " << other << '\n';
         noisy_counters().m_move_ctor++;
     }
 
     ~Noisy() {
-        std::cout << *this << ": destructor\n";
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": destructor\n";
         noisy_counters().m_dtor++;
     }
 
     Noisy& operator=(const Noisy& other) {
-        std::cout << *this << ": copy assignment from " << other << '\n';
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": copy assignment from " << other << '\n';
         noisy_counters().m_copy_assign++;
         return *this;
     }
 
     Noisy& operator=(Noisy&& other) noexcept {
-        std::cout << *this << ": move assignment from " << other << '\n';
+        if (noisy_counters().m_verbose)
+            std::cout << *this << ": move assignment from " << other << '\n';
         noisy_counters().m_move_assign++;
         return *this;
     }
@@ -115,7 +114,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Noisy& noisy) { return os << "Noisy(" << std::setw(2) << noisy.m_id << ')'; }
 
 private:
-    unsigned m_id = noisy_counters().next_id();
+    unsigned m_id = noisy_counters().m_next_id++;
 };
 
 }
