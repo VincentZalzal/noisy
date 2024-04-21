@@ -1,3 +1,8 @@
+// SPDX-ArtifactOfProjectName:     Noisy
+// SPDX-ArtifactOfProjectHomePage: https://github.com/VincentZalzal/noisy
+// SPDX-FileCopyrightText:         Copyright 2024 Vincent Zalzal
+// SPDX-License-Identifier:        MIT
+
 #pragma once
 
 #include <iomanip>
