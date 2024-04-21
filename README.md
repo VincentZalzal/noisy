@@ -39,6 +39,26 @@ Destructor count:           1
 ```
 (see it on [Compiler Explorer](https://godbolt.org/z/e586fqj7e))
 
+However, if you change the main function slightly:
+```cpp
+int main() {
+    vz::Noisy x = std::move(make_noisy());
+}
+```
+you now get this:
+```
+Noisy( 0): default constructor
+Noisy( 1): move constructor from Noisy( 0)
+Noisy( 0): destructor
+Noisy( 1): destructor
+
+===== Noisy counters =====
+Default constructor count:  1
+Move constructor count:     1
+Destructor count:           2
+```
+(see it on [Compiler Explorer](https://godbolt.org/z/MnE81PT7q))
+
 ### Testing
 
 `vz::Noisy` relies on global counters. You can query and reset the counters for testing purposes.
