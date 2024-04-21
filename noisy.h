@@ -1,4 +1,4 @@
-// SPDX-ArtifactOfProjectName:     Noisy
+// SPDX-ArtifactOfProjectName:     noisy
 // SPDX-ArtifactOfProjectHomePage: https://github.com/VincentZalzal/noisy
 // SPDX-FileCopyrightText:         Copyright 2024 Vincent Zalzal
 // SPDX-License-Identifier:        MIT
@@ -22,14 +22,18 @@ struct Counters {
         *this = {};
     }
 
-    void print(const char* msg = "Counters") const {
-        std::cout << "[ *** " << msg << " *** ]\n";
-        print_counter("Default constructor count: ", m_def_ctor   );
-        print_counter("Copy constructor count:    ", m_copy_ctor  );
-        print_counter("Move constructor count:    ", m_move_ctor  );
-        print_counter("Copy assignment count:     ", m_copy_assign);
-        print_counter("Move assignment count:     ", m_move_assign);
-        print_counter("Destructor count:          ", m_dtor       );
+    bool leaks() const {
+        return m_def_ctor + m_copy_ctor + m_move_ctor != m_dtor;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Counters& c) {
+        stream_counter(os, "Default constructor count: ", c.m_def_ctor   );
+        stream_counter(os, "Copy constructor count:    ", c.m_copy_ctor  );
+        stream_counter(os, "Move constructor count:    ", c.m_move_ctor  );
+        stream_counter(os, "Copy assignment count:     ", c.m_copy_assign);
+        stream_counter(os, "Move assignment count:     ", c.m_move_assign);
+        stream_counter(os, "Destructor count:          ", c.m_dtor       );
+        return os;
     }
 
     friend bool operator==(const Counters& lhs, const Counters& rhs) {
@@ -45,9 +49,9 @@ struct Counters {
     friend bool operator!=(const Counters& lhs, const Counters& rhs) { return !(lhs == rhs); }
 
 private:
-    static void print_counter(const char* msg, unsigned value) {
+    static void stream_counter(std::ostream& os, const char* msg, unsigned value) {
         if (value != 0)
-            std::cout << msg << std::setw(2) << value << '\n';
+            os << msg << std::setw(2) << value << '\n';
     }
 };
 
@@ -56,7 +60,7 @@ namespace detail {
 struct Globals {
     ~Globals() {
         if (m_verbose)
-            m_counters.print();
+            std::cout << "\n===== Noisy counters =====\n" << m_counters;
     }
 
     Counters m_counters;
