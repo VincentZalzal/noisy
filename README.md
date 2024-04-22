@@ -14,7 +14,7 @@ This project is kept as simple as possible. It is not intended for production co
 
 ### Code exploration
 
-The main use-case is code exploration, especially on [Compiler Explorer](https://godbolt.org/).
+The main use case is code exploration, especially on [Compiler Explorer](https://godbolt.org/).
 
 Just use the `vz::Noisy` type and a message is printed for each call to a special member function. A summary is also printed at the end of the program. An operation must be called at least once to appear in the summary.
 
